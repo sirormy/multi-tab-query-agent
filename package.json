@@ -1,10 +1,10 @@
 {
   "name": "multi-tab-query-agent",
-  "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "version": "1.2.0",
+  "description": "一个基于 Electron 的多标签 AI 查询聚合工具，支持在多个 AI 平台同时提问并获取答案",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "sirormy",
+  "homepage": "https://github.com/sirormy/multi-tab-query-agent",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
