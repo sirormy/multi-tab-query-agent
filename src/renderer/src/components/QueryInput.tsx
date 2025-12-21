@@ -33,7 +33,7 @@ export const QueryInput: React.FC<QueryInputProps> = ({ onBroadcast }) => {
             />
             <button
                 onClick={handleSend}
-                className="bg-blue-600 text-white px-6 py-2 rounded-r-md hover:bg-blue-700 font-medium transition-colors"
+                className="bg-blue-600 text-white px-6 py-2 rounded-r-md hover:bg-blue-700 font-medium transition-colors cursor-pointer"
             >
                 Broadcast
             </button>

@@ -22,6 +22,7 @@ if (process.contextIsolated) {
 }
 
 // Global listener for question sync (Runs in BrowserViews)
+
 ipcRenderer.on('question:sync', (_event, question) => {
   console.log('[Preload] Received question:', question)
 
@@ -31,19 +32,15 @@ ipcRenderer.on('question:sync', (_event, question) => {
 
   // Site-specific selectors
   if (url.includes('yuanbao.tencent.com')) {
-    // Tencent Yuanbao
     inputSelector = 'div[contenteditable="true"]'
-    // Fallback or more specific if needed. The spec mentioned textarea.ProseMirror but modern/rich text editors often use contenteditable divs.
-    // Let's try multiple potential selectors or stick to spec if confirmed. Spec said "textarea.ProseMirror".
-    // I will use a list of strategies.
-
-    // Attempt 1: Protocol based
   } else if (url.includes('deepseek.com') || url.includes('chat.deepseek.com')) {
     inputSelector = 'textarea'
-    buttonSelector = 'button[aria-label="Send"]' // Common pattern, need verification
+    buttonSelector = 'button[aria-label="Send"]'
+  } else if (url.includes('manus.im')) {
+    inputSelector = 'div[contenteditable], textarea'
   }
 
-  // Generic heuristic if no specific match or to refine
+  // Generic heuristic if no specific match
   const findInput = () => {
     if (inputSelector) return document.querySelector<HTMLElement>(inputSelector)
     return document.querySelector<HTMLElement>('textarea, div[contenteditable="true"]')
@@ -51,16 +48,43 @@ ipcRenderer.on('question:sync', (_event, question) => {
 
   const findButton = () => {
     if (buttonSelector) return document.querySelector<HTMLElement>(buttonSelector)
-    // Heuristic: button near input or with specific icon/text
-    // This is hard to do generically perfectly.
-    return null
+
+    // Heuristic search for button
+    const buttons = Array.from(document.querySelectorAll('button'))
+    return buttons.find(b => {
+      const ariaLabel = (b.getAttribute('aria-label') || '').toLowerCase()
+      const text = (b.textContent || '').toLowerCase()
+      const svgTitle = b.querySelector('svg title')?.textContent?.toLowerCase() || ''
+
+
+      // Exclude obvious non-send buttons if possible, but inclusive search is better
+      const isSendLike =
+        ariaLabel.includes('send') ||
+        ariaLabel.includes('发送') ||
+        text.includes('send') ||
+        text.includes('发送') ||
+        svgTitle.includes('send')
+
+      return isSendLike
+    }) || null
   }
 
   const inputEl = findInput()
   if (inputEl) {
-    // Simulate input
+    console.log('[Preload] Found input element:', inputEl)
+
+    // VISUAL DEBUGGING: Flash border red
+    const originalBorder = inputEl.style.border
+    inputEl.style.border = '4px solid red'
+    setTimeout(() => {
+      inputEl.style.border = originalBorder
+    }, 500)
+
+    // Focus and clear/set value
     inputEl.focus()
-    // For React/Vue controlled inputs, we often need to set value and dispatch events
+
+    // Handle different input types
+
     if (inputEl.tagName.toLowerCase() === 'textarea') {
       const textarea = inputEl as HTMLTextAreaElement
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
@@ -70,79 +94,77 @@ ipcRenderer.on('question:sync', (_event, question) => {
         textarea.value = question
       }
       textarea.dispatchEvent(new Event('input', { bubbles: true }))
+      textarea.dispatchEvent(new Event('change', { bubbles: true }))
     } else {
       // Contenteditable
-      inputEl.innerText = question
-      inputEl.dispatchEvent(new Event('input', { bubbles: true }))
+      // Try execCommand first as it works better with some frameworks (like ProseMirror/Manua)
+      inputEl.focus()
+      const success = document.execCommand('insertText', false, question)
+
+      if (!success) {
+        console.log('[Preload] execCommand failed, falling back to innerText')
+        inputEl.innerText = question
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }))
+      }
     }
 
     // Try to find submit button
     setTimeout(() => {
-      // Heuristic search for button if not defined
       let btn = findButton()
+
+      // Fallback strategies for finding button
       if (!btn) {
-        // Try to find a button that looks like a send button
-        // e.g. svgs inside buttons
-        const buttons = Array.from(document.querySelectorAll('button'))
-        // DeepSeek often uses an arrow icon or specific class.
-        // Yuanbao uses a specific testid or class.
-        btn = buttons.find(b => {
-          const ariaLabel = b.getAttribute('aria-label') || ''
-          const text = b.textContent || ''
-
-          // DeepSeek send button usually has no text, just an icon.
-          // Yuanbao might have "发送" or similar.
-          return (
-            ariaLabel.toLowerCase().includes('send') ||
-            ariaLabel.includes('发送') ||
-            text.includes('发送') ||
-            text.toLowerCase().includes('send')
-          )
-        }) || null
-
-        // Fallback: finding the last button in the input container?
-        // If no button found, look for one with specific SVG path if known?
-        // For now, let's trust aria-labels or generic "Send" text.
-
-        // Special case for DeepSeek:
-        if (!btn && url.includes('deepseek')) {
-          // DeepSeek's send button often distinct.
-          // Try looking for the button inside the prompt input area.
-          const inputArea = inputEl.closest('div') // Move up a bit
-          if (inputArea) {
-            btn = inputArea.parentElement?.querySelector('button') || null
+        // DeepSeek specific: button might be in a shadow DOM or nearby
+        if (url.includes('deepseek')) {
+          const inputContainer = inputEl.closest('div')
+          if (inputContainer) {
+            btn = inputContainer.parentElement?.querySelector('button') || null
+          }
+        }
+        // Generic: Look for button next to input
+        if (!btn) {
+          // Look up to 4 levels for a button
+          let current = inputEl.parentElement
+          for (let i = 0; i < 4 && current; i++) {
+            btn = current.querySelector('button, div[role="button"]') as HTMLElement
+            if (btn) break
+            current = current.parentElement
           }
         }
       }
 
       if (btn) {
         console.log('[Preload] Clicking button:', btn)
-        // Dispatch 'click' event manually is often better for React
-        /*
-        btn.click()
-        */
-        const mouseEvent = new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        });
-        btn.dispatchEvent(mouseEvent);
-
+        if (!(btn as HTMLButtonElement).disabled) {
+          const mouseEvent = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          });
+          btn.dispatchEvent(mouseEvent);
+        } else {
+          console.log('[Preload] Button is disabled, waiting...')
+          // Try simulating more events to enable it? 
+          // Sometimes focusout/blur helps?
+          inputEl.dispatchEvent(new Event('blur', { bubbles: true }))
+        }
       } else {
         console.log('[Preload] Could not find send button, trying Enter key')
-        // Try Enter key
-        // Some React apps need keydown AND keyup, or specifically "Enter" without modifiers.
-        // It's tricky to get right.
-        const enterEvent = new KeyboardEvent('keydown', {
+        // Enhance Enter key simulation
+        const keyOps = {
           key: 'Enter',
           code: 'Enter',
           keyCode: 13,
           which: 13,
           bubbles: true,
           cancelable: true
-        });
-        inputEl.dispatchEvent(enterEvent);
+        }
+        inputEl.dispatchEvent(new KeyboardEvent('keydown', keyOps));
+        inputEl.dispatchEvent(new KeyboardEvent('keypress', keyOps));
+        inputEl.dispatchEvent(new KeyboardEvent('keyup', keyOps));
       }
-    }, 500)
+    }, 600) // Increased delay slightly to allow UI updates
+  } else {
+    console.warn('[Preload] Input element not found')
   }
 })

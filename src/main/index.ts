@@ -1,59 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain, BrowserView, session } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
 let mainWindow: BrowserWindow
-const views = new Map<string, BrowserView>()
-let activeTabId: string | null = null
-
-function updateViewBounds(view: BrowserView) {
-  if (mainWindow) {
-    const contentBounds = mainWindow.getContentBounds()
-    // Assume top bar height is 120px
-    view.setBounds({ x: 0, y: 120, width: contentBounds.width, height: contentBounds.height - 120 })
-  }
-}
-
-function createTab(url: string): string {
-  const tabId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  // Create isolated session
-  const tabSession = session.fromPartition(`persist:${tabId}`)
-
-  const view = new BrowserView({
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
-      session: tabSession
-    }
-  })
-
-  view.webContents.loadURL(url)
-  view.setAutoResize({ width: true, height: true })
-
-  views.set(tabId, view)
-  return tabId
-}
-
-function switchTab(tabId: string) {
-  if (!mainWindow) return
-
-  const view = views.get(tabId)
-  if (!view) return
-
-  // Remove current view if exists
-  if (activeTabId) {
-    const currentView = views.get(activeTabId)
-    if (currentView) {
-      mainWindow.removeBrowserView(currentView)
-    }
-  }
-
-  // Add new view
-  mainWindow.addBrowserView(view)
-  updateViewBounds(view)
-  activeTabId = tabId
-}
 
 function createWindow(): void {
   // Create the browser window.
@@ -66,7 +16,8 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
-      contextIsolation: true
+      contextIsolation: true,
+      webviewTag: true
     }
   })
 
@@ -87,15 +38,9 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
-  // IPC Handlers
-  ipcMain.handle('tabs:create', (_, url) => createTab(url))
-
-  ipcMain.handle('tabs:switch', (_, tabId) => switchTab(tabId))
-
-  ipcMain.handle('question:broadcast', (_, question) => {
-    for (const view of views.values()) {
-      view.webContents.send('question:sync', question)
-    }
+  // Handle IPC to get preload script path
+  ipcMain.handle('get-preload-path', () => {
+    return join(__dirname, '../preload/index.js')
   })
 }
 
@@ -134,5 +79,3 @@ app.on('window-all-closed', () => {
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
