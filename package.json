@@ -1,6 +1,6 @@
 {
   "name": "multi-tab-query-agent",
-  "version": "1.2.0",
+  "version": "1.5.0",
   "description": "一个基于 Electron 的多标签 AI 查询聚合工具，支持在多个 AI 平台同时提问并获取答案",
   "main": "./out/main/index.js",
   "author": "sirormy",

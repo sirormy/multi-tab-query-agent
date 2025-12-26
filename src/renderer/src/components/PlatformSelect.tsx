@@ -3,6 +3,15 @@ import * as Select from '@radix-ui/react-select'
 import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '../lib/utils'
 
+import yuanbaoIcon from '../assets/icons/yuanbao.png'
+import deepseekIcon from '../assets/icons/deepseek.png'
+import geminiIcon from '../assets/icons/gemini.png'
+import chatgptIcon from '../assets/icons/chatgpt.png'
+import qwenIcon from '../assets/icons/qwen.png'
+import manusIcon from '../assets/icons/manus.png'
+import zaiIcon from '../assets/icons/zai.png'
+import doubaoIcon from '../assets/icons/doubao.png'
+
 type SelectItemProps = React.ComponentPropsWithoutRef<typeof Select.Item>
 
 interface PlatformSelectProps {
@@ -10,15 +19,26 @@ interface PlatformSelectProps {
     onValueChange: (value: string) => void
 }
 
+const platforms = [
+    { name: 'Tencent Yuanbao', url: 'https://yuanbao.tencent.com/', icon: yuanbaoIcon },
+    { name: 'DeepSeek', url: 'https://chat.deepseek.com/', icon: deepseekIcon },
+    { name: 'Gemini', url: 'https://gemini.google.com/', icon: geminiIcon },
+    { name: 'ChatGPT', url: 'https://chatgpt.com/', icon: chatgptIcon },
+    { name: 'Qwen', url: 'https://chat.qwen.ai/', icon: qwenIcon },
+    { name: 'Manus', url: 'https://manus.im/', icon: manusIcon },
+    { name: 'Z.AI', url: 'https://chat.z.ai/', icon: zaiIcon },
+    { name: 'Doubao', url: 'https://www.doubao.com/chat/', icon: doubaoIcon }
+]
+
 export const PlatformSelect: React.FC<PlatformSelectProps> = ({ value, onValueChange }) => {
     return (
         <Select.Root value={value} onValueChange={onValueChange}>
             <Select.Trigger
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 data-[placeholder]:text-gray-400"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 data-[placeholder]:text-gray-400 min-w-[160px]"
                 aria-label="Platform"
             >
                 <Select.Value placeholder="Select platform" />
-                <Select.Icon className="text-violet11">
+                <Select.Icon className="text-violet11 ml-auto">
                     <ChevronDown size={16} />
                 </Select.Icon>
             </Select.Trigger>
@@ -28,12 +48,18 @@ export const PlatformSelect: React.FC<PlatformSelectProps> = ({ value, onValueCh
                         <ChevronUp size={16} />
                     </Select.ScrollUpButton>
                     <Select.Viewport className="p-[5px]">
-                        <SelectItem value="https://yuanbao.tencent.com/">Tencent Yuanbao</SelectItem>
-                        <SelectItem value="https://chat.deepseek.com/">DeepSeek</SelectItem>
-                        <SelectItem value="https://gemini.google.com/">Gemini</SelectItem>
-                        <SelectItem value="https://chatgpt.com/">ChatGPT</SelectItem>
-                        <SelectItem value="https://chat.qwen.ai/">Qwen</SelectItem>
-                        <SelectItem value="https://manus.im/">Manus</SelectItem>
+                        {platforms.map((platform) => (
+                            <SelectItem key={platform.url} value={platform.url}>
+                                <div className="flex items-center gap-2">
+                                    <img
+                                        src={platform.icon}
+                                        alt=""
+                                        className="w-4 h-4 object-contain"
+                                    />
+                                    <span>{platform.name}</span>
+                                </div>
+                            </SelectItem>
+                        ))}
                     </Select.Viewport>
                     <Select.ScrollDownButton className="flex items-center justify-center h-[25px] bg-white text-violet11 cursor-default">
                         <ChevronDown size={16} />
@@ -49,14 +75,14 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(({ children
         <Select.Item
             value={value}
             className={cn(
-                'relative flex h-[30px] cursor-pointer select-none items-center rounded-md px-6 pr-9 text-xs text-gray-700 outline-none data-[disabled]:pointer-events-none data-[disabled]:text-gray-300 data-[highlighted]:bg-blue-600 data-[highlighted]:text-white',
+                'relative flex h-[30px] cursor-pointer select-none items-center rounded-md px-8 py-2 text-xs text-gray-700 outline-none data-[disabled]:pointer-events-none data-[disabled]:text-gray-300 data-[highlighted]:bg-blue-600 data-[highlighted]:text-white',
                 className
             )}
             {...props}
             ref={forwardedRef}
         >
             <Select.ItemText>{children}</Select.ItemText>
-            <Select.ItemIndicator className="absolute left-0 inline-flex h-[25px] w-[25px] items-center justify-center text-blue-600">
+            <Select.ItemIndicator className="absolute left-2 inline-flex h-[25px] w-[25px] items-center justify-center text-blue-600 data-[highlighted]:text-white">
                 <Check size={16} />
             </Select.ItemIndicator>
         </Select.Item>

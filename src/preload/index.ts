@@ -38,6 +38,12 @@ ipcRenderer.on('question:sync', (_event, question) => {
     buttonSelector = 'button[aria-label="Send"]'
   } else if (url.includes('manus.im')) {
     inputSelector = 'div[contenteditable], textarea'
+  } else if (url.includes('chat.z.ai')) {
+    inputSelector = 'textarea#chat-input'
+    buttonSelector = 'button#send-message-button'
+  } else if (url.includes('doubao.com')) {
+    inputSelector = 'textarea.semi-input-textarea'
+    buttonSelector = '#flow-end-msg-send'
   }
 
   // Generic heuristic if no specific match

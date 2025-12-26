@@ -84,6 +84,8 @@ function App() {
     else if (url.includes('chatgpt')) title = 'ChatGPT'
     else if (url.includes('qwen')) title = 'Qwen'
     else if (url.includes('manus')) title = 'Manus'
+    else if (url.includes('chat.z.ai')) title = 'Z.AI'
+    else if (url.includes('doubao')) title = 'Doubao'
 
     const tabId = `tab-${Date.now()}`
     const newTab: ExtendedTab = {

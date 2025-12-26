@@ -23,6 +23,8 @@
 - 💬 **ChatGPT** (chatgpt.com)
 - 🎯 **通义千问 Qwen** (qwen.ai)
 - 🔧 **Manus** (manus.im)
+- ⚡ **Z.AI** (chat.z.ai)
+- 🥟 **Doubao** (doubao.com)
 
 ### 3. 📢 问题广播
 - **统一输入**：在顶部输入框输入问题
@@ -229,6 +231,22 @@ webpreferences="contextIsolation=no, nodeIntegration=yes, sandbox=no, webSecurit
 - 登录状态独立保存，不会相互干扰
 
 ## 📝 更新日志
+
+### v1.5.0 (2025-12-25)
+- ⚡ 优化图标加载方式：改为本地内置图标，提升加载速度和离线可用性
+- ✨ 新增 Doubao 平台支持 (doubao.com)
+- ✨ 新增 Z.AI 平台支持 (chat.z.ai)
+- 🔧 为新平台适配专用的输入框和发送按钮选择器
+- 🎨 优化平台选择下拉菜单 UI，支持显示图标
+
+### v1.4.0 (2025-12-25)
+- ✨ 新增 Doubao 平台支持 (doubao.com)
+- 🔧 添加 Doubao 特定的输入框和发送按钮选择器
+
+### v1.3.0 (2025-12-25)
+- ✨ 新增 Z.AI 平台支持 (chat.z.ai)
+- 🔧 添加 Z.AI 特定的输入框和发送按钮选择器
+- 📝 更新文档和平台列表
 
 ### v1.2.0 (2025-12-21)
 - ✨ 新增选择性同步控制功能
